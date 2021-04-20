@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PokemoneApp.Models
+namespace PokemonApp.Models
 {
     class poke
     {

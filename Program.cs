@@ -10,12 +10,12 @@ using Colorful;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PokemoneApp.Models;
+using PokemonApp.Models;
 using Console = Colorful.Console;
 
-namespace PokemoneApp
+namespace PokemonApp
 {
-    class Program
+    public static class Program
     {
        
         static void Main(string[] args)
@@ -63,9 +63,16 @@ namespace PokemoneApp
             
             
         }
+
         public static Dictionary<string, Pokemon> pokemons = new Dictionary<string, Pokemon>();
 
-        
+        #region Active Methods
+
+        /// <summary>
+        /// get a full list of pokemons
+        /// 
+        /// </summary>
+        /// <param name="baseUrl"></param>
         public static async void GetPokemonAsync(string baseUrl)
         {
             
@@ -73,7 +80,6 @@ namespace PokemoneApp
             #region Getting all the api data
             try
             {
-               
                 using (var client = new HttpClient())
                 {
                     using (HttpResponseMessage respo = client.GetAsync(baseUrl).Result)
@@ -124,6 +130,12 @@ namespace PokemoneApp
             #endregion
         }
 
+        /// <summary>
+        /// get the pokemon object by name
+        /// 
+        /// </summary>
+        /// <param name="pokeName"></param>
+        /// <param name="baseUrl"></param>
         public static async void GetPokemonByName(string pokeName, string baseUrl)
         {
 
@@ -172,6 +184,12 @@ namespace PokemoneApp
 
         }
 
+        /// <summary>
+        /// get the pokemon abilities 
+        /// 
+        /// </summary>
+        /// <param name="pokeName"></param>
+        /// <param name="baseUrl"></param>
         public static async void GetPokemonAbility(string pokeName, string baseUrl)
         {
 
@@ -192,17 +210,15 @@ namespace PokemoneApp
                                 var dataObj = JObject.Parse(data);
                                 var enDataObj = dataObj.Properties().ToList();
                                
-                                var pokemoneEffects = JsonConvert.DeserializeObject<PokemonAbility.Ability>(dataObj.ToString());
+                                var pokemonEffects = JsonConvert.DeserializeObject<PokemonAbility.Ability>(dataObj.ToString());
 
-                                //PokemonAbility pokeAbility = JsonConvert.DeserializeObject<PokemonAbility>(pokemoneEffects.effect_entries.to);
-                                foreach (var item in pokemoneEffects.effect_entries)
+                                foreach (var item in pokemonEffects.effect_entries)
                                 {
                                     if(item.language.name== "en")
                                     {
                                         Console.WriteLine("       - {0,-10} ", item.effect);
                                     }
                                 }
-                                
                                 
                             }
                             else
@@ -222,5 +238,7 @@ namespace PokemoneApp
             #endregion
 
         }
+        
+        #endregion
     }
 }
