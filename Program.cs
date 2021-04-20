@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Colorful;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PokemoneApp.Models;
-
+using Console = Colorful.Console;
 
 namespace PokemoneApp
 {
@@ -18,87 +20,52 @@ namespace PokemoneApp
        
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Figlet figlet = new Figlet();
+            Console.WriteLine(figlet.ToAscii("Pokemon"), Color.FromArgb(67, 144, 198));
             string baseUrl = "https://pokeapi.co/api/v2/pokemon/";
             GetPokemonAsync(baseUrl);
-            Console.Write("Enter pokemon name or enter pokeout to close the app: ");
-            String pokeName = Console.ReadLine();
-            while ((pokeName.Trim().ToLower() != "pokeout") || string.IsNullOrEmpty(pokeName.Trim()))
+            
+            String pokeName = "";
+            while (true)
             {
-                
-                int value;
-                if(int.TryParse(pokeName , out value) || string.IsNullOrWhiteSpace(pokeName))
+                Console.WriteLine("Type pokeList to get the full list of Pokemons.");
+                Console.Write("Enter pokemon name or enter pokeout to close the app: ");
+                pokeName = Console.ReadLine();
+                if (pokeName.ToLower() == "pokeout")
                 {
-                    Console.WriteLine("You enterd numerical/empty value please enter name only!");
-                    Console.Write("Enter pokemon name or enter pokeout to close the app: ");
-                    pokeName = Console.ReadLine();
-                }
-                else if(!pokemons.ContainsKey(pokeName))
-                {
-                    Console.Write("Pokemon name does not exist please enter correct pokemon name or enter pokeout to close the app: ");
-                    pokeName = Console.ReadLine();
+                    Environment.Exit(0);
                 }
                 else
                 {
-                    break;
+                    int value;
+                    if (int.TryParse(pokeName, out value) || string.IsNullOrWhiteSpace(pokeName))
+                    {
+                        Console.WriteLine("You enterd numerical/empty value please enter name only!");
+                    }
+                    else if (pokeName.ToLower() == "pokelist")
+                    {
+                        GetPokemonAsync(baseUrl);
+                    }
+                    else if (!pokemons.ContainsKey(pokeName))
+                    {
+                        Console.WriteLine("Pokemon name does not exist please enter correct pokemon name or enter pokeout to close the app: ");
+                        
+                    }
+                    else
+                    {
+                        Pokemon pokeObj = pokemons[pokeName];
+                        GetPokemonByName(pokeObj.Name, pokeObj.Url);
+                        Console.WriteLine();
+                    }
                 }
-            }
-            if (pokeName.ToLower() == "pokeout")
-            {
-                Environment.Exit(0);
-            } 
-            else
-            {
 
-               Pokemon pokeObj = pokemons[pokeName];
-               GetPokemonByName(pokeObj.Name, pokeObj.Url);
             }
             
             
         }
         public static Dictionary<string, Pokemon> pokemons = new Dictionary<string, Pokemon>();
 
-        public static async Task<poke> GetPokemonDataAsync(string baseUrl)
-        {
-
-            poke pokemonData = new poke();
-            #region Getting all the api data
-            try
-            {
-
-                using (var client = new HttpClient())
-                {
-                    using (HttpResponseMessage respo = client.GetAsync(baseUrl).Result)
-                    {
-
-                        using (HttpContent content = respo.Content)
-                        {
-                            var data = await content.ReadAsStringAsync();
-                            if (data != null)
-                            {
-                                pokemonData = JsonConvert.DeserializeObject<poke>(data);
-
-
-                               
-                            }
-                            else
-                            {
-                                Console.WriteLine("NO Data----------?");
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-                Console.WriteLine("OMG we got an Exception ------------------");
-                Console.WriteLine(ex);
-            }
-            #endregion
-
-            return pokemonData;
-        }
+        
         public static async void GetPokemonAsync(string baseUrl)
         {
             
@@ -178,9 +145,65 @@ namespace PokemoneApp
                                 
                                 
                                 poke poke = JsonConvert.DeserializeObject<poke>(data);
-                               var abilities =  poke.abilities.Where(a => a != null).Select(ab => ab.ability.name).ToList();
+                               var abilities =  poke.abilities.Where(a => a != null).ToList();
+                               Console.WriteLine("{0} - Abilities are: ",pokeName);
+                                foreach (var item in abilities)
+                                {
+                                    Console.WriteLine(" * {0,3}",item.ability.name);
+                                    GetPokemonAbility(pokeName, item.ability.url);
+                                }
 
+                            }
+                            else
+                            {
+                                Console.WriteLine("NO Data----------?");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
 
+                Console.WriteLine("OMG we got an Exception ------------------");
+                Console.WriteLine(ex);
+            }
+            #endregion
+
+        }
+
+        public static async void GetPokemonAbility(string pokeName, string baseUrl)
+        {
+
+            #region Getting all the api data
+            try
+            {
+
+                using (var client = new HttpClient())
+                {
+                    using (HttpResponseMessage respo = client.GetAsync(baseUrl).Result)
+                    {
+
+                        using (HttpContent content = respo.Content)
+                        {
+                            var data = await content.ReadAsStringAsync();
+                            if (data != null)
+                            {
+                                var dataObj = JObject.Parse(data);
+                                var enDataObj = dataObj.Properties().ToList();
+                               
+                                var pokemoneEffects = JsonConvert.DeserializeObject<PokemonAbility.Ability>(dataObj.ToString());
+
+                                //PokemonAbility pokeAbility = JsonConvert.DeserializeObject<PokemonAbility>(pokemoneEffects.effect_entries.to);
+                                foreach (var item in pokemoneEffects.effect_entries)
+                                {
+                                    if(item.language.name== "en")
+                                    {
+                                        Console.WriteLine("       - {0,-10} ", item.effect);
+                                    }
+                                }
+                                
+                                
                             }
                             else
                             {
