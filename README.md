@@ -1,6 +1,6 @@
 # PokemonApp
 
-The executable fille uploaded under name “PokemonApp.exe”.
+The executable fille uploaded under name “PokemonApp.zip”.
 
 The application list the name of the Pokémon’s incase someone does not know them all.
 It will ask you to enter one of the options:
